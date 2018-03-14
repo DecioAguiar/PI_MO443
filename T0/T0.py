@@ -1,13 +1,7 @@
 import sys
-import os
-import glob
-import codecs
-import optparse
 from scipy import misc
 import numpy as np
 import matplotlib.pyplot as plt
-
-
 
 def gerar_negativo(img):
 	return 255 - img

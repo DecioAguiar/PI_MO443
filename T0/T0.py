@@ -40,7 +40,7 @@ if __name__ == '__main__':
 	print("altura:",img.shape[0])
 	print("intensidade mínima:",img.min())
 	print("intensidade máxima:",img.max())
-	print("intensidade média: %0.f" % img.mean())
+	print("intensidade média: %0.2f" % img.mean())
 
 	img_neg = gerar_negativo(img)
 	img_tr = gerar_trns(img)

@@ -59,6 +59,15 @@ def interpolacao_bicubica(img, escala):
             nova_img[l,c] = bicubica(img, (l/escala), (c/escala))
     return nova_img
 
+def main():
+
+	parser = optparse.OptionParser()
+	parser.add_option('-a', '--angle', type='float', dest='angle', default=0.0, help='angulo de rotação medido em graus no sentido anti-horário')
+	parser.add_option('-e', '--scale', type='float', dest='scale', default=1.0, help='fato de escala')
+	parser.add_option('-d', '--dimension', type='int', dest='dimension', default=None, help='dimensão da imagem de saída em pixels')
+	parser.add_option('-i', '--input', type='string', dest='input', default=None, help='dimensão da imagem de saída em pixels')
+
+	(options, args) = parser.parse_args()
 
 
 if __name__ == '__main__':

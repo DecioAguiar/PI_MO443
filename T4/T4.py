@@ -1,74 +1,44 @@
-import cv2
-import optparse
 import numpy as np
-from math import ceil, floor
+from math import ceil, floor, pow
 import matplotlib.pyplot as plt
-from skimage.color import rgb2gray
+import imageio
+import optparse
+import vmp
+import lagrange
+import bicubica
+import bilinear
 
-def vizinho_mais_proximo(img,x_,y_):
-    return img[round(x_), round(y_)]
-
-def interpolacao_vmp(img, escala):
-    nova_img = np.zeros((int(escala*(img.shape[0]-1)),int(escala*(img.shape[1]-1)))) 
-    linhas = nova_img.shape[0]
-    colunas = nova_img.shape[1]
-    for l in range(linhas):
-        for c in range(colunas):
-            nova_img[l,c] = vizinho_mais_proximo(img,(l/escala), (c/escala))
-    return nova_img
-
-def bilinear(img,x_,y_):
-    dx = x_ - floor(x_)
-    dy = y_ - floor(y_)
-    return (1-dx)*(1-dy)*img[floor(x_),floor(y_)] + dx*(1-dy)*img[floor(x_)+1, floor(y_)] + (1-dx)*dy*img[floor(x_), floor(y_)+1] + dx*dy*img[floor(x_)+1, floor(y_)+1]
-
-def interpolacao_bilinear(img, escala):
-    nova_img = np.zeros((int(escala*(img.shape[0]-1)),int(escala*(img.shape[1]-1)))) 
-    linhas = nova_img.shape[0]
-    colunas = nova_img.shape[1]
-    for l in range(linhas):
-        for c in range(colunas):
-            nova_img[l,c] = bilinear(img, (l/escala), (c/escala))
-    return nova_img
-
-def P(t):
-    if(t>0):
-        return t
-    else:
-        return 0.0
-
-def R(s):
-    return (1/6.0) * ( (P(s+2) ** 3) - 4*(P(s+1)**3) + 6*(P(s+1)**3) - 4*(P(s-1)**3) )                        
-
-def bicubica(img, x_, y_):
-    dx = x_ - floor(x_)
-    dy = y_ - floor(y_)
-    soma = 0
-    for m in range(-1,3,1):
-        for n in range(-1,3,1):
-            if( ((floor(x_) + m) >= 0) and ((floor(y_)+n) >= 0) and ( (floor(x_)+m) < img.shape[0] ) and ( (floor(y_) + n) < img.shape[1] )):                
-                soma += (img[(floor(x_)+m), (floor(y_)+n)]) * R(m-dx) * R(dy-n)
-    return soma                
-
-def interpolacao_bicubica(img, escala):
-    nova_img = np.zeros((int(escala*(img.shape[0]-1)),int(escala*(img.shape[1]-1)))) 
-    linhas = nova_img.shape[0]
-    colunas = nova_img.shape[1]
-    for l in range(linhas):
-        for c in range(colunas):
-            nova_img[l,c] = bicubica(img, (l/escala), (c/escala))
-    return nova_img
+#Vetor contendo os objetos de modo de interpolacao
+interpolacoes = [vmp, bilinear, bicubica, lagrange]
 
 def main():
 
 	parser = optparse.OptionParser()
-	parser.add_option('-a', '--angle', type='float', dest='angle', default=0.0, help='angulo de rotação medido em graus no sentido anti-horário')
-	parser.add_option('-e', '--scale', type='float', dest='scale', default=1.0, help='fato de escala')
-	parser.add_option('-d', '--dimension', type='int', dest='dimension', default=None, help='dimensão da imagem de saída em pixels')
-	parser.add_option('-i', '--input', type='string', dest='input', default=None, help='dimensão da imagem de saída em pixels')
-
+	parser.add_option('-a', '--angle', type='float', dest='angle', default=None, help='angulo de rotação medido em graus no sentido anti-horário')
+	parser.add_option('-e', '--scale', type='float', dest='scale', default=None, help='fator de escala')
+	parser.add_option('-d', '--dimension', type='int', dest='dimension', default=None, help='dimensão da imagem de saída em pixels', nargs=2)
+	parser.add_option('-i', '--input', type='string', dest='input', default=None, help='caminho da imagem de entrada')
+	parser.add_option('-o', '--output', type='string', dest='output', default="out.png", help='caminho da imagem de entrada')
+	parser.add_option('-m', '--mode', type='choice', choices=['0','1','2','3'], dest='mode', default=0, help='interpolacao a ser usada')
 	(options, args) = parser.parse_args()
 
+	img = imageio.imread(options.input)
+
+	if(options.angle != None):
+		saida = interpolacoes[int(options.mode)].rotacao(img, options.angle)		
+	elif(options.scale != None):
+		saida = interpolacoes[int(options.mode)].interpolacao(img, options.scale)
+	elif(options.dimension != None):
+		saida = interpolacoes[int(options.mode)].escala(img, options.dimension[0], options.dimension[1])
+
+	imageio.imsave(options.output, saida)
+
+	plt.imshow(img, cmap="gray")
+	plt.title("Imagem de Entrada")
+	plt.show()
+	plt.imshow(saida, cmap="gray")
+	plt.title("Imagem de Saida")
+	plt.show()
 
 if __name__ == '__main__':
 	main()
